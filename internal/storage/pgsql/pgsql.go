@@ -24,7 +24,7 @@ func New() (*Storage, error) {
 
 	stmt, err := db.Prepare(`
 		CREATE TABLE IF NOT EXISTS url(
-			id INTEGER PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			alias TEXT NOT NULL UNIQUE,
 			url TEXT NOT NULL);
 	`)
@@ -53,13 +53,11 @@ func New() (*Storage, error) {
 func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	const op = "storage.pq.SaveURL"
 
-	stmt, err := s.db.Prepare("INSERT INTO url(url, alias) VALUES(?, ?)")
+	// stmt, err := s.db.Prepare(`INSERT INTO url(url, alias) VALUES($1, $2) RETURNING id`)
+	var id int64
+	query := "INSERT INTO url(url, alias) VALUES($1, $2) RETURNING id"
 
-	if err != nil {
-		return 0, fmt.Errorf("%s, %w", op, err)
-	}
-
-	res, err := stmt.Exec(urlToSave, alias)
+	err := s.db.QueryRow(query, urlToSave, alias).Scan(&id)
 
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok {
@@ -68,11 +66,6 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 			}
 		}
 		return 0, fmt.Errorf("%s: execute statement: %w", op, err)
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("%s: failed to get last insert id: %w", op, err)
 	}
 
 	return id, nil
