@@ -30,16 +30,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	id, err := storage.SaveURL("https://vk.com", "vk")
-
+	err = storage.DeleteURL("vk")
 	if err != nil {
-		log.Error("failed to save url: ", sl.Err(err))
+		log.Error("failed to get url", sl.Err(err))
 		os.Exit(1)
 	}
-
-	log.Info("saved url", slog.Int64("id", id))
-
-	_ = storage
 
 	// TODO: init router: chi, "chi render"
 
