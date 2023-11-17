@@ -2,10 +2,14 @@ package main
 
 import (
 	"api-shorter/internal/config"
+	mwLogger "api-shorter/internal/http-server/middleware/logger"
 	"api-shorter/internal/lib/logger/sl"
 	"api-shorter/internal/storage/pgsql"
 	"log/slog"
 	"os"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 const (
@@ -36,7 +40,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: init router: chi, "chi render"
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	// TODO: run server
 
